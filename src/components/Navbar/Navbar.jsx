@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import LogoIcon from '../Logo/LogoIcon'
+import { useAuth } from '../../context/useAuth'
 
 const navLinks = [
   { label: 'Home', href: '#home' },
@@ -8,6 +10,8 @@ const navLinks = [
 ]
 
 function Navbar({ menuOpen, onToggleMenu, onCloseMenu }) {
+  const { isAuthenticated } = useAuth()
+
   return (
     <header className="navbar">
       <div className="navbar__inner container">
@@ -27,12 +31,20 @@ function Navbar({ menuOpen, onToggleMenu, onCloseMenu }) {
             ))}
           </ul>
           <div className="navbar__actions">
-            <a href="#login" className="navbar__login" onClick={onCloseMenu}>
-              Log In
-            </a>
-            <a href="#signup" className="btn btn-primary navbar__cta" onClick={onCloseMenu}>
-              Get Started
-            </a>
+            {isAuthenticated ? (
+              <Link to="/dashboard" className="btn btn-primary navbar__cta" onClick={onCloseMenu}>
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="navbar__login" onClick={onCloseMenu}>
+                  Log In
+                </Link>
+                <Link to="/signup" className="btn btn-primary navbar__cta" onClick={onCloseMenu}>
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 

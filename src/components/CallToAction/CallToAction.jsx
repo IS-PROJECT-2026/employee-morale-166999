@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function CallToAction() {
   return (
     <section className="cta">
@@ -10,9 +12,9 @@ function CallToAction() {
               motivated to do their best work.
             </p>          </div>
           <div className="cta__actions">
-            <a href="#signup" className="btn btn-primary cta__btn-primary">
+            <Link to="/signup" className="btn btn-primary cta__btn-primary">
               Get Started
-            </a>
+            </Link>
             <a href="#how-it-works" className="btn btn-outline-light cta__btn-secondary">
               Learn More
             </a>

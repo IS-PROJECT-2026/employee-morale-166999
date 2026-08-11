@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const metrics = [
   { label: 'Morale', score: 4.2 },
   { label: 'Culture', score: 4.5 },
@@ -199,9 +201,9 @@ function Hero() {
             genuinely want to be part of.
           </p>
           <div className="hero__actions">
-            <a href="#signup" className="btn btn-primary hero__btn hero__btn--primary">
+            <Link to="/signup" className="btn btn-primary hero__btn hero__btn--primary">
               Get Started
-            </a>
+            </Link>
             <a href="#how-it-works" className="btn btn-secondary hero__btn">
               Learn More
             </a>

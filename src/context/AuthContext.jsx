@@ -7,6 +7,7 @@ import {
   logoutUser,
   registerUser,
 } from '../services/firebase/auth'
+import { createEmployeeIfNotExists, getEmployeeErrorMessage } from '../services/firebase/employees'
 import { AuthContext } from './authContext'
 
 export function AuthProvider({ children }) {
@@ -35,6 +36,13 @@ export function AuthProvider({ children }) {
       register: async ({ name, email, password }) => {
         try {
           const registeredUser = await registerUser({ name, email, password })
+
+          try {
+            await createEmployeeIfNotExists(registeredUser)
+          } catch (employeeError) {
+            return { user: registeredUser, error: getEmployeeErrorMessage(employeeError) }
+          }
+
           return { user: registeredUser, error: null }
         } catch (error) {
           return { user: null, error: getAuthErrorMessage(error) }

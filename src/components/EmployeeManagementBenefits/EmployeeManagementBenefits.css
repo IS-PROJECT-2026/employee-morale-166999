@@ -1,0 +1,122 @@
+.benefits {
+  padding-block: var(--section-padding);
+  background: var(--bg-section-warm);
+}
+
+.benefits__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+.benefits__card {
+  padding: 3rem 2.5rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.benefits__card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.benefits__card--employees {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 241, 242, 0.92) 100%);
+  border-color: rgba(225, 29, 72, 0.2);
+}
+
+.benefits__card--management {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(238, 242, 255, 0.92) 100%);
+  border-color: rgba(67, 56, 202, 0.18);
+}
+
+.benefits__card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.benefits__card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+.benefits__card-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.benefits__card-icon--employees {
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.benefits__card-icon--management {
+  background-color: rgba(67, 56, 202, 0.12);
+  color: var(--color-primary);
+}
+
+.benefits__card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.benefits__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.benefits__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  font-size: 1.0625rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.benefits__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.benefits__check svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.benefits__check--employees {
+  background-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.benefits__check--management {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .benefits__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .benefits__card {
+    padding: 2rem 1.5rem;
+  }
+}

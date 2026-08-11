@@ -27,7 +27,7 @@ function CheckIcon() {
 
 function EmployeeManagementBenefits() {
   return (
-    <section id="about" className="benefits section-surface section-surface--warm">
+    <section id="benefits" className="benefits section-surface section-surface--warm">
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">Two Sides. One Platform.</h2>

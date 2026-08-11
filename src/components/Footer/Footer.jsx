@@ -4,7 +4,7 @@ const footerNav = [
   { label: 'Home', href: '#home' },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
-  { label: 'About', href: '#about' },
+  { label: 'Benefits', href: '#benefits' },
 ]
 
 const legalLinks = [

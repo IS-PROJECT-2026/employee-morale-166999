@@ -67,14 +67,14 @@ function SignUp() {
     }
 
     if (user) {
-      navigate('/dashboard', { replace: true })
+      navigate('/profile', { replace: true })
     }
   }
 
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join WorkPulse to share feedback and stay connected with your team."
+      subtitle="Create your account to set up your employee profile and access WorkPulse."
       footer={
         <>
           Already have an account?{' '}

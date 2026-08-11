@@ -1,0 +1,12 @@
+import { useContext } from 'react'
+import { EmployeeContext } from './employeeContext'
+
+export function useEmployee() {
+  const context = useContext(EmployeeContext)
+
+  if (!context) {
+    throw new Error('useEmployee must be used within an EmployeeProvider')
+  }
+
+  return context
+}

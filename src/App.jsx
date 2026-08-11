@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage'
 import Login from './pages/Login/Login'
 import SignUp from './pages/SignUp/SignUp'
 import Dashboard from './pages/Dashboard/Dashboard'
+import Profile from './pages/Profile/Profile'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicAuthRoute from './components/auth/PublicAuthRoute'
 
@@ -31,6 +32,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

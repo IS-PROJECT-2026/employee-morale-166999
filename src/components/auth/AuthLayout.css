@@ -52,6 +52,7 @@
 
 .auth-card__header {
   margin-bottom: 1.75rem;
+  text-align: center;
 }
 
 .auth-card__title {

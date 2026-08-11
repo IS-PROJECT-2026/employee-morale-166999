@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,11 +23,13 @@ const requiredKeys = [
 export const isFirebaseConfigured = requiredKeys.every((key) => Boolean(import.meta.env[key]))
 
 let auth = null
+let db = null
 
 if (isFirebaseConfigured) {
   try {
     const app = initializeApp(firebaseConfig)
     auth = getAuth(app)
+    db = getFirestore(app)
   } catch (error) {
     console.error('[Firebase] Failed to initialize:', error)
   }
@@ -38,4 +41,4 @@ if (isFirebaseConfigured) {
   )
 }
 
-export { auth }
+export { auth, db }

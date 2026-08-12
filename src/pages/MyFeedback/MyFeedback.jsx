@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import EmployeeLayout from '../../components/employee/EmployeeLayout'
 import { useAuth } from '../../context/useAuth'
+import { useRatingCategories } from '../../context/useRatingCategories'
 import {
   calculateFeedbackAverage,
-  FEEDBACK_CATEGORIES,
   formatAverageRating,
   getFeedbackByUserId,
   getFeedbackErrorMessage,
+  getRatingValue,
   RATING_LABELS,
 } from '../../services/firebase/feedback'
 import '../../components/auth/AuthLayout.css'
@@ -34,8 +35,8 @@ function formatSubmissionDate(timestamp) {
   })
 }
 
-function FeedbackHistoryCard({ feedback }) {
-  const average = formatAverageRating(calculateFeedbackAverage(feedback))
+function FeedbackHistoryCard({ feedback, categories }) {
+  const average = formatAverageRating(calculateFeedbackAverage(feedback, categories))
 
   return (
     <article className="feedback-history-card">
@@ -49,14 +50,18 @@ function FeedbackHistoryCard({ feedback }) {
       </div>
 
       <div className="feedback-history-card__ratings">
-        {FEEDBACK_CATEGORIES.map(({ key, label }) => (
-          <div key={key} className="feedback-history-card__rating">
-            <span className="feedback-history-card__rating-label">{label}</span>
-            <span className="feedback-history-card__rating-value">
-              {feedback[key]}/5 — {RATING_LABELS[feedback[key]]}
-            </span>
-          </div>
-        ))}
+        {categories.map((category) => {
+          const rating = getRatingValue(feedback, category.key)
+
+          return (
+            <div key={category.key} className="feedback-history-card__rating">
+              <span className="feedback-history-card__rating-label">{category.name}</span>
+              <span className="feedback-history-card__rating-value">
+                {rating != null ? `${rating}/5 — ${RATING_LABELS[rating]}` : '—'}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       <div>
@@ -75,6 +80,7 @@ function FeedbackHistoryCard({ feedback }) {
 
 function MyFeedback() {
   const { user } = useAuth()
+  const { activeCategories, loading: categoriesLoading } = useRatingCategories()
   const [feedbackList, setFeedbackList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -115,7 +121,7 @@ function MyFeedback() {
   }, [user])
 
   const activeFeedbackList = user ? feedbackList : []
-  const activeLoading = user ? loading : false
+  const activeLoading = user ? loading || categoriesLoading : false
   const activeError = user ? error : ''
 
   return (
@@ -179,7 +185,11 @@ function MyFeedback() {
         ) : (
           <div className="feedback-history-list">
             {activeFeedbackList.map((feedback) => (
-              <FeedbackHistoryCard key={feedback.id} feedback={feedback} />
+              <FeedbackHistoryCard
+                key={feedback.id}
+                feedback={feedback}
+                categories={activeCategories}
+              />
             ))}
           </div>
         )}

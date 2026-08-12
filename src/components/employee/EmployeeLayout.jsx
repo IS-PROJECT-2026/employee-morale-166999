@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import LogoIcon from '../Logo/LogoIcon'
 import { useAuth } from '../../context/useAuth'
+import { useEmployee } from '../../context/useEmployee'
+import { isManagementUser } from '../../utils/roles'
 import './EmployeeLayout.css'
 
 const navItems = [
@@ -12,6 +14,7 @@ const navItems = [
 
 function EmployeeLayout({ children }) {
   const { user, logout } = useAuth()
+  const { employee } = useEmployee()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -59,6 +62,21 @@ function EmployeeLayout({ children }) {
                   </NavLink>
                 </li>
               ))}
+              {isManagementUser(employee) && (
+                <li>
+                  <NavLink
+                    to="/management"
+                    className={({ isActive }) =>
+                      `employee-layout__link employee-layout__link--management${
+                        isActive ? ' employee-layout__link--active' : ''
+                      }`
+                    }
+                    onClick={closeMenu}
+                  >
+                    Management
+                  </NavLink>
+                </li>
+              )}
               <li>
                 <NavLink
                   to="/profile"

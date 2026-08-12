@@ -2,25 +2,54 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isValidRating(value) {
-      return value is int && value >= 1 && value <= 5;
+    function employeeDoc() {
+      return get(/databases/$(database)/documents/employees/$(request.auth.uid));
+    }
+
+    function employeeExists() {
+      return request.auth != null && employeeDoc().exists;
+    }
+
+    function isAdminUser() {
+      return employeeExists() && (
+        employeeDoc().data.get('role', 'employee') == 'admin' ||
+        employeeDoc().data.get('isAdmin', false) == true
+      );
+    }
+
+    function isManagementUser() {
+      return employeeExists() && (
+        isAdminUser() ||
+        employeeDoc().data.get('role', 'employee') == 'manager'
+      );
     }
 
     function isValidFeedbackCreate() {
       let data = request.resource.data;
       return data.userId == request.auth.uid
-        && isValidRating(data.workEnvironment)
-        && isValidRating(data.managementSupport)
-        && isValidRating(data.teamCollaboration)
-        && isValidRating(data.communication)
-        && isValidRating(data.workLifeBalance)
-        && isValidRating(data.overallSatisfaction)
+        && data.ratings is map
+        && data.ratings.size() > 0
+        && data.ratings.size() <= 30
         && data.comment is string
         && data.comment.size() <= 1000;
     }
 
+    function isValidCategoryCreate() {
+      let data = request.resource.data;
+      return data.name is string
+        && data.name.size() > 0
+        && data.key is string
+        && data.key.size() > 0
+        && data.description is string
+        && data.active is bool
+        && data.isDefault is bool
+        && data.createdBy == request.auth.uid;
+    }
+
     match /employees/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (
+        request.auth.uid == userId || isManagementUser()
+      );
 
       allow create: if request.auth != null
         && request.auth.uid == userId
@@ -28,18 +57,28 @@ service cloud.firestore {
         && request.resource.data.email is string
         && request.resource.data.fullName is string
         && request.resource.data.isAdmin is bool
-        && request.resource.data.isAdmin == false;
+        && request.resource.data.isAdmin == false
+        && request.resource.data.get('role', 'employee') == 'employee';
 
       allow update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false);
+        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
+        && request.resource.data.get('role', 'employee') == resource.data.get('role', 'employee');
 
       allow delete: if false;
     }
 
     match /feedback/{feedbackId} {
       allow create: if request.auth != null && isValidFeedbackCreate();
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid || isManagementUser()
+      );
+      allow update, delete: if false;
+    }
+
+    match /ratingCategories/{categoryId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && isAdminUser() && isValidCategoryCreate();
       allow update, delete: if false;
     }
   }

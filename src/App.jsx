@@ -6,8 +6,10 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import Profile from './pages/Profile/Profile'
 import Feedback from './pages/Feedback/Feedback'
 import MyFeedback from './pages/MyFeedback/MyFeedback'
+import ManagementDashboard from './pages/Management/ManagementDashboard'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicAuthRoute from './components/auth/PublicAuthRoute'
+import AdminRoute from './components/auth/AdminRoute'
 
 function App() {
   return (
@@ -58,6 +60,16 @@ function App() {
         element={
           <ProtectedRoute>
             <MyFeedback />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManagementDashboard />
+            </AdminRoute>
           </ProtectedRoute>
         }
       />

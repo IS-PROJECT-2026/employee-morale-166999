@@ -7,19 +7,13 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from './config'
+import { DEFAULT_RATING_CATEGORIES } from './ratingCategories'
 
 const FEEDBACK_COLLECTION = 'feedback'
 
 export const COMMENT_MAX_LENGTH = 1000
 
-export const FEEDBACK_CATEGORIES = [
-  { key: 'workEnvironment', label: 'Work Environment' },
-  { key: 'managementSupport', label: 'Management Support' },
-  { key: 'teamCollaboration', label: 'Team Collaboration' },
-  { key: 'communication', label: 'Communication' },
-  { key: 'workLifeBalance', label: 'Work-Life Balance' },
-  { key: 'overallSatisfaction', label: 'Overall Satisfaction' },
-]
+export const LEGACY_CATEGORY_KEYS = DEFAULT_RATING_CATEGORIES.map((category) => category.key)
 
 export const RATING_LABELS = {
   1: 'Very Poor',
@@ -74,9 +68,37 @@ export function isValidRating(value) {
   return Number.isInteger(value) && value >= 1 && value <= 5
 }
 
-export function calculateFeedbackAverage(feedback) {
-  const total = FEEDBACK_CATEGORIES.reduce((sum, { key }) => sum + (feedback[key] || 0), 0)
-  return total / FEEDBACK_CATEGORIES.length
+export function normalizeFeedbackRatings(data) {
+  if (data.ratings && typeof data.ratings === 'object') {
+    return { ...data.ratings }
+  }
+
+  const ratings = {}
+
+  LEGACY_CATEGORY_KEYS.forEach((key) => {
+    if (data[key] != null) {
+      ratings[key] = data[key]
+    }
+  })
+
+  return ratings
+}
+
+export function mapFeedbackDoc(snapshot) {
+  const data = snapshot.data()
+  const ratings = normalizeFeedbackRatings(data)
+
+  return {
+    id: snapshot.id,
+    userId: data.userId,
+    ratings,
+    comment: data.comment || '',
+    createdAt: data.createdAt ?? null,
+  }
+}
+
+export function getRatingValue(feedback, categoryKey) {
+  return feedback.ratings?.[categoryKey] ?? null
 }
 
 export function formatAverageRating(average) {
@@ -90,32 +112,127 @@ export function formatAverageRating(average) {
   }
 }
 
-export function mapFeedbackDoc(snapshot) {
-  const data = snapshot.data()
+export function calculateFeedbackAverage(feedback, categories) {
+  if (!categories.length) {
+    return 0
+  }
+
+  const total = categories.reduce(
+    (sum, category) => sum + (getRatingValue(feedback, category.key) || 0),
+    0,
+  )
+
+  return total / categories.length
+}
+
+export function computeUserFeedbackAnalytics(feedbackList, categories) {
+  if (!feedbackList.length || !categories.length) {
+    return null
+  }
+
+  const categoryAverages = categories.map((category) => {
+    const total = feedbackList.reduce(
+      (sum, feedback) => sum + (getRatingValue(feedback, category.key) || 0),
+      0,
+    )
+    const average = total / feedbackList.length
+
+    return {
+      key: category.key,
+      label: category.name,
+      average,
+      displayAverage: formatAverageRating(average),
+    }
+  })
+
+  const overallAverageValue =
+    feedbackList.reduce(
+      (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
+      0,
+    ) / feedbackList.length
 
   return {
-    id: snapshot.id,
-    userId: data.userId,
-    workEnvironment: data.workEnvironment,
-    managementSupport: data.managementSupport,
-    teamCollaboration: data.teamCollaboration,
-    communication: data.communication,
-    workLifeBalance: data.workLifeBalance,
-    overallSatisfaction: data.overallSatisfaction,
-    comment: data.comment || '',
-    createdAt: data.createdAt ?? null,
+    submissionCount: feedbackList.length,
+    overallAverage: formatAverageRating(overallAverageValue),
+    categoryAverages,
+    latestFeedback: feedbackList[0],
   }
 }
 
-export async function createFeedback(userId, feedbackData) {
+export function computeManagementAnalytics(feedbackList, categories) {
+  if (!categories.length) {
+    return {
+      submissionCount: 0,
+      overallAverage: formatAverageRating(0),
+      categoryAverages: [],
+      recentFeedback: [],
+      latestFeedback: null,
+    }
+  }
+
+  if (!feedbackList.length) {
+    return {
+      submissionCount: 0,
+      overallAverage: formatAverageRating(0),
+      categoryAverages: categories.map((category) => ({
+        key: category.key,
+        label: category.name,
+        average: 0,
+        displayAverage: formatAverageRating(0),
+      })),
+      recentFeedback: [],
+      latestFeedback: null,
+    }
+  }
+
+  const categoryAverages = categories.map((category) => {
+    const ratedEntries = feedbackList.filter(
+      (feedback) => getRatingValue(feedback, category.key) != null,
+    )
+    const total = ratedEntries.reduce(
+      (sum, feedback) => sum + getRatingValue(feedback, category.key),
+      0,
+    )
+    const average = ratedEntries.length ? total / ratedEntries.length : 0
+
+    return {
+      key: category.key,
+      label: category.name,
+      average,
+      displayAverage: formatAverageRating(average),
+      responseCount: ratedEntries.length,
+    }
+  })
+
+  const overallAverageValue =
+    feedbackList.reduce(
+      (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
+      0,
+    ) / feedbackList.length
+
+  const sortedFeedback = [...feedbackList].sort(
+    (a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt),
+  )
+
+  return {
+    submissionCount: feedbackList.length,
+    overallAverage: formatAverageRating(overallAverageValue),
+    categoryAverages,
+    recentFeedback: sortedFeedback.slice(0, 5),
+    latestFeedback: sortedFeedback[0] || null,
+  }
+}
+
+export async function createFeedback(userId, feedbackData, categories) {
+  const ratings = {}
+
+  categories.forEach((category) => {
+    ratings[category.key] = feedbackData.ratings[category.key]
+  })
+
   const payload = {
     userId,
-    workEnvironment: feedbackData.workEnvironment,
-    managementSupport: feedbackData.managementSupport,
-    teamCollaboration: feedbackData.teamCollaboration,
-    communication: feedbackData.communication,
-    workLifeBalance: feedbackData.workLifeBalance,
-    overallSatisfaction: feedbackData.overallSatisfaction,
+    ratings,
     comment: feedbackData.comment?.trim() || '',
     createdAt: serverTimestamp(),
   }
@@ -136,45 +253,6 @@ function getTimestampMillis(timestamp) {
   return new Date(timestamp).getTime() || 0
 }
 
-export async function getFeedbackByUserId(userId) {
-  const feedbackQuery = query(getFeedbackCollection(), where('userId', '==', userId))
-
-  const snapshot = await getDocs(feedbackQuery)
-
-  return snapshot.docs
-    .map(mapFeedbackDoc)
-    .sort((a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt))
-}
-
-export function computeUserFeedbackAnalytics(feedbackList) {
-  if (!feedbackList.length) {
-    return null
-  }
-
-  const categoryAverages = FEEDBACK_CATEGORIES.map(({ key, label }) => {
-    const total = feedbackList.reduce((sum, feedback) => sum + (feedback[key] || 0), 0)
-    const average = total / feedbackList.length
-
-    return {
-      key,
-      label,
-      average,
-      displayAverage: formatAverageRating(average),
-    }
-  })
-
-  const overallAverageValue =
-    feedbackList.reduce((sum, feedback) => sum + calculateFeedbackAverage(feedback), 0) /
-    feedbackList.length
-
-  return {
-    submissionCount: feedbackList.length,
-    overallAverage: formatAverageRating(overallAverageValue),
-    categoryAverages,
-    latestFeedback: feedbackList[0],
-  }
-}
-
 export function formatFeedbackTimestamp(timestamp) {
   if (!timestamp) {
     return '—'
@@ -190,5 +268,46 @@ export function formatFeedbackTimestamp(timestamp) {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   })
 }
+
+export async function getFeedbackByUserId(userId) {
+  const feedbackQuery = query(getFeedbackCollection(), where('userId', '==', userId))
+  const snapshot = await getDocs(feedbackQuery)
+
+  return snapshot.docs
+    .map(mapFeedbackDoc)
+    .sort((a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt))
+}
+
+export async function getAllFeedback() {
+  const snapshot = await getDocs(getFeedbackCollection())
+
+  return snapshot.docs
+    .map(mapFeedbackDoc)
+    .sort((a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt))
+}
+
+export function buildInitialRatings(categories) {
+  return categories.reduce((accumulator, category) => {
+    accumulator[category.key] = null
+    return accumulator
+  }, {})
+}
+
+export function validateFeedbackRatings(ratings, categories) {
+  const errors = {}
+
+  categories.forEach((category) => {
+    if (!isValidRating(ratings[category.key])) {
+      errors[category.key] = `Please rate ${category.name.toLowerCase()}.`
+    }
+  })
+
+  return errors
+}
+
+// Backward-compatible export for components still importing FEEDBACK_CATEGORIES
+export { DEFAULT_RATING_CATEGORIES as FEEDBACK_CATEGORIES } from './ratingCategories'

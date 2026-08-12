@@ -69,6 +69,7 @@ export function mapEmployeeDoc(snapshot) {
     jobTitle: data.jobTitle || '',
     dateJoined: data.dateJoined || '',
     isAdmin: Boolean(data.isAdmin),
+    role: data.role || (data.isAdmin ? 'admin' : 'employee'),
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
   }
@@ -110,6 +111,7 @@ export async function createEmployeeIfNotExists(user) {
     jobTitle: '',
     dateJoined: '',
     isAdmin: false,
+    role: 'employee',
     createdAt: serverTimestamp(),
   }
 

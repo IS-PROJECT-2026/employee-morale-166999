@@ -3,29 +3,20 @@ import { Link } from 'react-router-dom'
 import EmployeeLayout from '../../components/employee/EmployeeLayout'
 import RatingInput from '../../components/Feedback/RatingInput'
 import { useAuth } from '../../context/useAuth'
+import { useRatingCategories } from '../../context/useRatingCategories'
 import {
+  buildInitialRatings,
   COMMENT_MAX_LENGTH,
   createFeedback,
-  FEEDBACK_CATEGORIES,
   getFeedbackErrorMessage,
-  isValidRating,
+  validateFeedbackRatings,
 } from '../../services/firebase/feedback'
 import '../../components/auth/AuthLayout.css'
 import '../../components/employee/EmployeeLayout.css'
 import '../../components/Feedback/Feedback.css'
 
-const initialRatings = {
-  workEnvironment: null,
-  managementSupport: null,
-  teamCollaboration: null,
-  communication: null,
-  workLifeBalance: null,
-  overallSatisfaction: null,
-}
-
-function Feedback() {
-  const { user } = useAuth()
-  const [ratings, setRatings] = useState(initialRatings)
+function FeedbackForm({ activeCategories, user }) {
+  const [ratings, setRatings] = useState(() => buildInitialRatings(activeCategories))
   const [comment, setComment] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState('')
@@ -44,25 +35,8 @@ function Feedback() {
     setFieldErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
-  const validate = () => {
-    const errors = {}
-
-    FEEDBACK_CATEGORIES.forEach(({ key, label }) => {
-      if (!isValidRating(ratings[key])) {
-        errors[key] = `Please rate ${label.toLowerCase()}.`
-      }
-    })
-
-    if (comment.length > COMMENT_MAX_LENGTH) {
-      errors.comment = `Comment must be ${COMMENT_MAX_LENGTH} characters or fewer.`
-    }
-
-    setFieldErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
   const resetForm = () => {
-    setRatings(initialRatings)
+    setRatings(buildInitialRatings(activeCategories))
     setComment('')
     setFieldErrors({})
     setFormError('')
@@ -78,17 +52,30 @@ function Feedback() {
       return
     }
 
-    if (!validate()) {
+    const ratingErrors = validateFeedbackRatings(ratings, activeCategories)
+    const errors = { ...ratingErrors }
+
+    if (comment.length > COMMENT_MAX_LENGTH) {
+      errors.comment = `Comment must be ${COMMENT_MAX_LENGTH} characters or fewer.`
+    }
+
+    setFieldErrors(errors)
+
+    if (Object.keys(errors).length > 0) {
       return
     }
 
     setSubmitting(true)
 
     try {
-      await createFeedback(user.uid, {
-        ...ratings,
-        comment,
-      })
+      await createFeedback(
+        user.uid,
+        {
+          ratings,
+          comment,
+        },
+        activeCategories,
+      )
 
       setSuccessMessage('Thank you! Your feedback has been submitted successfully.')
       resetForm()
@@ -98,6 +85,89 @@ function Feedback() {
       setSubmitting(false)
     }
   }
+
+  return (
+    <form className="feedback-form" onSubmit={handleSubmit} noValidate>
+      <div className="feedback-form__scale">
+        Rate each category from <strong>1 (Very Poor)</strong> to{' '}
+        <strong>5 (Excellent)</strong>. All ratings are required.
+      </div>
+
+      {activeCategories.map((category) => (
+        <RatingInput
+          key={category.key}
+          id={`feedback-${category.key}`}
+          label={category.name}
+          value={ratings[category.key]}
+          onChange={handleRatingChange(category.key)}
+          error={fieldErrors[category.key]}
+          disabled={submitting}
+        />
+      ))}
+
+      <div className="auth-field feedback-form__comment">
+        <label htmlFor="feedback-comment">Additional comments (optional)</label>
+        <textarea
+          id="feedback-comment"
+          name="comment"
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+          disabled={submitting}
+          maxLength={COMMENT_MAX_LENGTH}
+          placeholder="Share any additional thoughts about your workplace experience…"
+          aria-invalid={Boolean(fieldErrors.comment)}
+          aria-describedby="feedback-comment-counter"
+        />
+        <div
+          id="feedback-comment-counter"
+          className={`feedback-form__counter${
+            comment.length >= COMMENT_MAX_LENGTH ? ' feedback-form__counter--limit' : ''
+          }`}
+        >
+          {comment.length}/{COMMENT_MAX_LENGTH}
+        </div>
+        {fieldErrors.comment && (
+          <span className="auth-field__error" role="alert">
+            {fieldErrors.comment}
+          </span>
+        )}
+      </div>
+
+      <div ref={statusRef} className="feedback-form__status">
+        {successMessage && (
+          <div className="feedback-form__success" role="status">
+            <span className="feedback-form__success-icon" aria-hidden="true">
+              ✓
+            </span>
+            <div>
+              <p className="feedback-form__success-title">{successMessage}</p>
+              <Link to="/my-feedback" className="feedback-form__success-link">
+                View your feedback history
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {formError && (
+          <div className="auth-alert" role="alert">
+            {formError}
+          </div>
+        )}
+      </div>
+
+      <div className="employee-profile-actions">
+        <button type="submit" className="btn btn-primary" disabled={submitting}>
+          {submitting ? 'Submitting…' : 'Submit Feedback'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function Feedback() {
+  const { user } = useAuth()
+  const { activeCategories, loading: categoriesLoading } = useRatingCategories()
+  const formKey = activeCategories.map((category) => category.key).join('|')
 
   return (
     <EmployeeLayout>
@@ -134,78 +204,14 @@ function Feedback() {
           </Link>
         </header>
 
-        <form className="feedback-form" onSubmit={handleSubmit} noValidate>
-          <div className="feedback-form__scale">
-            Rate each category from <strong>1 (Very Poor)</strong> to <strong>5 (Excellent)</strong>.
-            All ratings are required.
+        {categoriesLoading ? (
+          <div className="auth-loading profile-loading" role="status" aria-live="polite">
+            <div className="auth-loading__spinner" aria-hidden="true" />
+            <p>Loading feedback categories…</p>
           </div>
-
-          {FEEDBACK_CATEGORIES.map(({ key, label }) => (
-            <RatingInput
-              key={key}
-              id={`feedback-${key}`}
-              label={label}
-              value={ratings[key]}
-              onChange={handleRatingChange(key)}
-              error={fieldErrors[key]}
-              disabled={submitting}
-            />
-          ))}
-
-          <div className="auth-field feedback-form__comment">
-            <label htmlFor="feedback-comment">Additional comments (optional)</label>
-            <textarea
-              id="feedback-comment"
-              name="comment"
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              disabled={submitting}
-              maxLength={COMMENT_MAX_LENGTH}
-              placeholder="Share any additional thoughts about your workplace experience…"
-              aria-invalid={Boolean(fieldErrors.comment)}
-              aria-describedby="feedback-comment-counter"
-            />
-            <div
-              id="feedback-comment-counter"
-              className={`feedback-form__counter${
-                comment.length >= COMMENT_MAX_LENGTH ? ' feedback-form__counter--limit' : ''
-              }`}
-            >
-              {comment.length}/{COMMENT_MAX_LENGTH}
-            </div>
-            {fieldErrors.comment && (
-              <span className="auth-field__error" role="alert">
-                {fieldErrors.comment}
-              </span>
-            )}
-          </div>
-
-          <div ref={statusRef} className="feedback-form__status">
-            {successMessage && (
-              <div className="feedback-form__success" role="status">
-                <span className="feedback-form__success-icon" aria-hidden="true">✓</span>
-                <div>
-                  <p className="feedback-form__success-title">{successMessage}</p>
-                  <Link to="/my-feedback" className="feedback-form__success-link">
-                    View your feedback history
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {formError && (
-              <div className="auth-alert" role="alert">
-                {formError}
-              </div>
-            )}
-          </div>
-
-          <div className="employee-profile-actions">
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? 'Submitting…' : 'Submit Feedback'}
-            </button>
-          </div>
-        </form>
+        ) : (
+          <FeedbackForm key={formKey} activeCategories={activeCategories} user={user} />
+        )}
       </div>
     </EmployeeLayout>
   )

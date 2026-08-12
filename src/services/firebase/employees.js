@@ -1,6 +1,8 @@
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   serverTimestamp,
@@ -69,6 +71,7 @@ export function mapEmployeeDoc(snapshot) {
     jobTitle: data.jobTitle || '',
     dateJoined: data.dateJoined || '',
     isAdmin: Boolean(data.isAdmin),
+    role: data.role || (data.isAdmin ? 'admin' : 'employee'),
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
   }
@@ -93,6 +96,22 @@ export async function getEmployeeByUserId(userId) {
   return mapEmployeeDoc(snapshot)
 }
 
+export async function getAllEmployees() {
+  const snapshot = await getDocs(collection(getDbInstance(), EMPLOYEES_COLLECTION))
+
+  return snapshot.docs
+    .map(mapEmployeeDoc)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const nameCompare = (a.fullName || a.email).localeCompare(b.fullName || b.email)
+      if (nameCompare !== 0) {
+        return nameCompare
+      }
+
+      return a.email.localeCompare(b.email)
+    })
+}
+
 export async function createEmployeeIfNotExists(user) {
   const docRef = getEmployeeDocRef(user.uid)
   const snapshot = await getDoc(docRef)
@@ -110,6 +129,7 @@ export async function createEmployeeIfNotExists(user) {
     jobTitle: '',
     dateJoined: '',
     isAdmin: false,
+    role: 'employee',
     createdAt: serverTimestamp(),
   }
 

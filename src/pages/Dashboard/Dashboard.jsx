@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import EmployeeLayout from '../../components/employee/EmployeeLayout'
 import { useAuth } from '../../context/useAuth'
 import { useEmployee } from '../../context/useEmployee'
+import { useRatingCategories } from '../../context/useRatingCategories'
 import {
   calculateFeedbackAverage,
   computeUserFeedbackAnalytics,
@@ -10,6 +11,7 @@ import {
   formatFeedbackTimestamp,
   getFeedbackByUserId,
   getFeedbackErrorMessage,
+  getRatingValue,
   RATING_LABELS,
 } from '../../services/firebase/feedback'
 import '../../components/auth/AuthLayout.css'
@@ -48,6 +50,7 @@ function CategoryBar({ label, average, displayAverage }) {
 function Dashboard() {
   const { user } = useAuth()
   const { employee } = useEmployee()
+  const { activeCategories, loading: categoriesLoading } = useRatingCategories()
   const [feedbackList, setFeedbackList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -90,12 +93,17 @@ function Dashboard() {
   }, [user])
 
   const analytics = useMemo(
-    () => (feedbackList.length ? computeUserFeedbackAnalytics(feedbackList) : null),
-    [feedbackList],
+    () =>
+      feedbackList.length && activeCategories.length
+        ? computeUserFeedbackAnalytics(feedbackList, activeCategories)
+        : null,
+    [feedbackList, activeCategories],
   )
 
   const latestAverage = analytics?.latestFeedback
-    ? formatAverageRating(calculateFeedbackAverage(analytics.latestFeedback))
+    ? formatAverageRating(
+        calculateFeedbackAverage(analytics.latestFeedback, activeCategories),
+      )
     : null
 
   return (
@@ -148,7 +156,7 @@ function Dashboard() {
           </div>
         )}
 
-        {loading ? (
+        {loading || categoriesLoading ? (
           <div className="auth-loading dashboard-loading" role="status" aria-live="polite">
             <div className="auth-loading__spinner" aria-hidden="true" />
             <p>Loading your dashboard…</p>
@@ -221,31 +229,18 @@ function Dashboard() {
                   </span>
                 </div>
                 <div className="dashboard-latest__grid">
-                  <div className="dashboard-latest__item">
-                    <span className="dashboard-latest__label">Overall satisfaction</span>
-                    <span className="dashboard-latest__value">
-                      {analytics.latestFeedback.overallSatisfaction}/5 —{' '}
-                      {RATING_LABELS[analytics.latestFeedback.overallSatisfaction]}
-                    </span>
-                  </div>
-                  <div className="dashboard-latest__item">
-                    <span className="dashboard-latest__label">Work environment</span>
-                    <span className="dashboard-latest__value">
-                      {analytics.latestFeedback.workEnvironment}/5
-                    </span>
-                  </div>
-                  <div className="dashboard-latest__item">
-                    <span className="dashboard-latest__label">Management support</span>
-                    <span className="dashboard-latest__value">
-                      {analytics.latestFeedback.managementSupport}/5
-                    </span>
-                  </div>
-                  <div className="dashboard-latest__item">
-                    <span className="dashboard-latest__label">Team collaboration</span>
-                    <span className="dashboard-latest__value">
-                      {analytics.latestFeedback.teamCollaboration}/5
-                    </span>
-                  </div>
+                  {activeCategories.slice(0, 4).map((category) => {
+                    const rating = getRatingValue(analytics.latestFeedback, category.key)
+
+                    return (
+                      <div key={category.key} className="dashboard-latest__item">
+                        <span className="dashboard-latest__label">{category.name}</span>
+                        <span className="dashboard-latest__value">
+                          {rating != null ? `${rating}/5 — ${RATING_LABELS[rating]}` : '—'}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
                 {analytics.latestFeedback.comment ? (
                   <p className="dashboard-latest__comment">{analytics.latestFeedback.comment}</p>

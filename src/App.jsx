@@ -6,8 +6,13 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import Profile from './pages/Profile/Profile'
 import Feedback from './pages/Feedback/Feedback'
 import MyFeedback from './pages/MyFeedback/MyFeedback'
+import ManagementDashboard from './pages/Management/ManagementDashboard'
+import ManagementEmployeesPage from './pages/Management/ManagementEmployeesPage'
+import ManagementCategoriesPage from './pages/Management/ManagementCategoriesPage'
+import EmployeeFeedbackPage from './pages/Management/EmployeeFeedbackPage'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicAuthRoute from './components/auth/PublicAuthRoute'
+import AdminRoute from './components/auth/AdminRoute'
 
 function App() {
   return (
@@ -58,6 +63,46 @@ function App() {
         element={
           <ProtectedRoute>
             <MyFeedback />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManagementDashboard />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/categories"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManagementCategoriesPage />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/employees"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManagementEmployeesPage />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/employees/:userId"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <EmployeeFeedbackPage />
+            </AdminRoute>
           </ProtectedRoute>
         }
       />

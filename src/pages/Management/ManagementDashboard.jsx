@@ -18,17 +18,33 @@ import '../../components/management/EmployeeFeedbackDetail.css'
 import '../../components/management/DailyFeedbackChart.css'
 import './ManagementDashboard.css'
 
-function MetricRow({ label, average, displayAverage }) {
+function MetricRow({ label, average, displayAverage, responseCount = 0 }) {
+  const hasAverage = average != null && displayAverage
+  const responseLabel = `${responseCount} ${responseCount === 1 ? 'response' : 'responses'}`
+
   return (
     <div className="insights-metric">
       <div className="insights-metric__top">
-        <span className="insights-metric__label">{label}</span>
-        <span className="insights-metric__value">{displayAverage.displayScore}</span>
+        <div className="insights-metric__label-wrap">
+          <div className="insights-metric__label-row">
+            <span className="insights-metric__label">{label}</span>
+            <span
+              className={`insights-metric__responses${
+                responseCount === 0 ? ' insights-metric__responses--empty' : ''
+              }`}
+            >
+              {responseLabel}
+            </span>
+          </div>
+        </div>
+        <span className="insights-metric__value">
+          {hasAverage ? displayAverage.displayScore : '—'}
+        </span>
       </div>
       <div className="insights-metric__track">
         <div
           className="insights-metric__fill"
-          style={{ width: `${(average / 5) * 100}%` }}
+          style={{ width: hasAverage ? `${(average / 5) * 100}%` : '0%' }}
         />
       </div>
     </div>
@@ -101,7 +117,9 @@ function ManagementDashboard() {
       return null
     }
 
-    return [...analytics.categoryAverages].sort((a, b) => b.average - a.average)[0]
+    return [...analytics.categoryAverages]
+      .filter((category) => category.average != null)
+      .sort((a, b) => b.average - a.average)[0]
   }, [analytics.categoryAverages])
 
   const employeeLookup = useMemo(() => {
@@ -168,6 +186,7 @@ function ManagementDashboard() {
                           label={category.label}
                           average={category.average}
                           displayAverage={category.displayAverage}
+                          responseCount={category.responseCount ?? 0}
                         />
                       ))}
                     </div>

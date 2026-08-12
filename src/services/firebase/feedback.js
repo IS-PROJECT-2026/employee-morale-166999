@@ -104,6 +104,12 @@ export function getRatingValue(feedback, categoryKey) {
   return feedback.ratings?.[categoryKey] ?? null
 }
 
+export function getFeedbackRatedValues(feedback, categories) {
+  return categories
+    .map((category) => getRatingValue(feedback, category.key))
+    .filter((value) => isValidRating(value))
+}
+
 export function formatAverageRating(average) {
   const score = Math.round(average * 10) / 10
   const labelKey = Math.min(5, Math.max(1, Math.round(average)))
@@ -116,16 +122,15 @@ export function formatAverageRating(average) {
 }
 
 export function calculateFeedbackAverage(feedback, categories) {
-  if (!categories.length) {
+  const ratedValues = getFeedbackRatedValues(feedback, categories)
+
+  if (!ratedValues.length) {
     return 0
   }
 
-  const total = categories.reduce(
-    (sum, category) => sum + (getRatingValue(feedback, category.key) || 0),
-    0,
-  )
+  const total = ratedValues.reduce((sum, value) => sum + value, 0)
 
-  return total / categories.length
+  return total / ratedValues.length
 }
 
 export function computeUserFeedbackAnalytics(feedbackList, categories) {
@@ -134,25 +139,34 @@ export function computeUserFeedbackAnalytics(feedbackList, categories) {
   }
 
   const categoryAverages = categories.map((category) => {
-    const total = feedbackList.reduce(
-      (sum, feedback) => sum + (getRatingValue(feedback, category.key) || 0),
+    const ratedEntries = feedbackList.filter((feedback) =>
+      isValidRating(getRatingValue(feedback, category.key)),
+    )
+    const total = ratedEntries.reduce(
+      (sum, feedback) => sum + getRatingValue(feedback, category.key),
       0,
     )
-    const average = total / feedbackList.length
+    const average = ratedEntries.length ? total / ratedEntries.length : null
 
     return {
       key: category.key,
       label: category.name,
       average,
-      displayAverage: formatAverageRating(average),
+      displayAverage: average != null ? formatAverageRating(average) : null,
+      responseCount: ratedEntries.length,
     }
   })
 
-  const overallAverageValue =
-    feedbackList.reduce(
-      (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
-      0,
-    ) / feedbackList.length
+  const ratedFeedback = feedbackList.filter(
+    (feedback) => getFeedbackRatedValues(feedback, categories).length > 0,
+  )
+
+  const overallAverageValue = ratedFeedback.length
+    ? ratedFeedback.reduce(
+        (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
+        0,
+      ) / ratedFeedback.length
+    : 0
 
   return {
     submissionCount: feedbackList.length,
@@ -189,29 +203,34 @@ export function computeManagementAnalytics(feedbackList, categories) {
   }
 
   const categoryAverages = categories.map((category) => {
-    const ratedEntries = feedbackList.filter(
-      (feedback) => getRatingValue(feedback, category.key) != null,
+    const ratedEntries = feedbackList.filter((feedback) =>
+      isValidRating(getRatingValue(feedback, category.key)),
     )
     const total = ratedEntries.reduce(
       (sum, feedback) => sum + getRatingValue(feedback, category.key),
       0,
     )
-    const average = ratedEntries.length ? total / ratedEntries.length : 0
+    const average = ratedEntries.length ? total / ratedEntries.length : null
 
     return {
       key: category.key,
       label: category.name,
       average,
-      displayAverage: formatAverageRating(average),
+      displayAverage: average != null ? formatAverageRating(average) : null,
       responseCount: ratedEntries.length,
     }
   })
 
-  const overallAverageValue =
-    feedbackList.reduce(
-      (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
-      0,
-    ) / feedbackList.length
+  const ratedFeedback = feedbackList.filter(
+    (feedback) => getFeedbackRatedValues(feedback, categories).length > 0,
+  )
+
+  const overallAverageValue = ratedFeedback.length
+    ? ratedFeedback.reduce(
+        (sum, feedback) => sum + calculateFeedbackAverage(feedback, categories),
+        0,
+      ) / ratedFeedback.length
+    : 0
 
   const sortedFeedback = [...feedbackList].sort(
     (a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt),
@@ -272,11 +291,16 @@ export function computeDailyFeedbackTrend(feedbackList, categories, dayCount = 1
       totalsByDay[dateKey] = {
         submissions: 0,
         ratingTotal: 0,
+        ratedSubmissions: 0,
       }
     }
 
     totalsByDay[dateKey].submissions += 1
-    totalsByDay[dateKey].ratingTotal += calculateFeedbackAverage(feedback, categories)
+
+    if (getFeedbackRatedValues(feedback, categories).length > 0) {
+      totalsByDay[dateKey].ratingTotal += calculateFeedbackAverage(feedback, categories)
+      totalsByDay[dateKey].ratedSubmissions += 1
+    }
   })
 
   const today = new Date()
@@ -298,9 +322,14 @@ export function computeDailyFeedbackTrend(feedbackList, categories, dayCount = 1
       dateKey,
       label: formatChartDayLabel(dateKey),
       submissions: dayTotals?.submissions || 0,
-      averageRating: dayTotals ? dayTotals.ratingTotal / dayTotals.submissions : null,
+      averageRating:
+        dayTotals?.ratedSubmissions > 0
+          ? dayTotals.ratingTotal / dayTotals.ratedSubmissions
+          : null,
       displayAverage:
-        dayTotals != null ? formatAverageRating(dayTotals.ratingTotal / dayTotals.submissions) : null,
+        dayTotals?.ratedSubmissions > 0
+          ? formatAverageRating(dayTotals.ratingTotal / dayTotals.ratedSubmissions)
+          : null,
     })
   }
 

@@ -30,14 +30,15 @@ function DashboardStat({ label, value, detail }) {
 }
 
 function CategoryBar({ label, average, displayAverage }) {
-  const width = `${(average / 5) * 100}%`
+  const hasAverage = average != null && displayAverage
+  const width = hasAverage ? `${(average / 5) * 100}%` : '0%'
 
   return (
     <div className="dashboard-bar">
       <div className="dashboard-bar__header">
         <span className="dashboard-bar__label">{label}</span>
         <span className="dashboard-bar__score">
-          {displayAverage.displayScore}/5 · {displayAverage.label}
+          {hasAverage ? `${displayAverage.displayScore}/5 · ${displayAverage.label}` : 'Not rated yet'}
         </span>
       </div>
       <div className="dashboard-bar__track">

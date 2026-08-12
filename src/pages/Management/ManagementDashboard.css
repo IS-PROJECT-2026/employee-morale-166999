@@ -126,16 +126,49 @@
 
 .insights-metric__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.5rem;
+}
+
+.insights-metric__label-wrap {
+  min-width: 0;
+}
+
+.insights-metric__label-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .insights-metric__label {
   font-size: 0.9375rem;
   font-weight: 600;
   color: #3f3f46;
+}
+
+.insights-metric__responses {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #0f766e;
+  background: #ecfdf5;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(15, 118, 110, 0.08);
+}
+
+.insights-metric__responses--empty {
+  color: #71717a;
+  background: #f4f4f5;
+  border-color: #e4e4e7;
+  box-shadow: none;
 }
 
 .insights-metric__value {

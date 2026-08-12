@@ -102,12 +102,37 @@ function Feedback() {
   return (
     <EmployeeLayout>
       <div className="employee-panel employee-panel--wide">
-        <p className="employee-panel__eyebrow">Give Feedback</p>
-        <h1 className="employee-panel__title">Share Your Workplace Experience</h1>
-        <p className="employee-panel__text">
-          Rate key aspects of your workplace and optionally add comments to help your
-          organization understand how things are going.
-        </p>
+        <header className="feedback-page-header">
+          <div className="feedback-page-header__main">
+            <span className="feedback-page-header__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 9h8M8 13h5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <div className="feedback-page-header__content">
+              <p className="feedback-page-header__eyebrow">Give Feedback</p>
+              <h1 className="feedback-page-header__title">Share Your Workplace Experience</h1>
+              <p className="feedback-page-header__text">
+                Rate key aspects of your workplace and optionally add comments to help your
+                organization understand how things are going.
+              </p>
+            </div>
+          </div>
+          <Link to="/my-feedback" className="btn btn-secondary feedback-page-header__action">
+            My Feedback
+          </Link>
+        </header>
 
         <form className="feedback-form" onSubmit={handleSubmit} noValidate>
           <div className="feedback-form__scale">

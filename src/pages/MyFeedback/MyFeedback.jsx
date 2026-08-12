@@ -121,11 +121,42 @@ function MyFeedback() {
   return (
     <EmployeeLayout>
       <div className="employee-panel employee-panel--wide">
-        <p className="employee-panel__eyebrow">My Feedback</p>
-        <h1 className="employee-panel__title">Your Feedback History</h1>
-        <p className="employee-panel__text">
-          Review your previous workplace feedback submissions. Only you can see your entries.
-        </p>
+        <header className="feedback-page-header">
+          <div className="feedback-page-header__main">
+            <span className="feedback-page-header__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 002 2h2a2 2 0 002-2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8 12h8M8 16h5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <div className="feedback-page-header__content">
+              <p className="feedback-page-header__eyebrow">My Feedback</p>
+              <h1 className="feedback-page-header__title">Your Feedback History</h1>
+              <p className="feedback-page-header__text">
+                Review your previous workplace feedback submissions. Only you can see your entries.
+              </p>
+            </div>
+          </div>
+          <Link to="/feedback" className="btn btn-primary feedback-page-header__action">
+            Give Feedback
+          </Link>
+        </header>
 
         {activeError && (
           <div className="auth-alert employee-panel__alert" role="alert">

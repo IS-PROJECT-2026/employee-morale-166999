@@ -145,3 +145,50 @@ export async function getFeedbackByUserId(userId) {
     .map(mapFeedbackDoc)
     .sort((a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt))
 }
+
+export function computeUserFeedbackAnalytics(feedbackList) {
+  if (!feedbackList.length) {
+    return null
+  }
+
+  const categoryAverages = FEEDBACK_CATEGORIES.map(({ key, label }) => {
+    const total = feedbackList.reduce((sum, feedback) => sum + (feedback[key] || 0), 0)
+    const average = total / feedbackList.length
+
+    return {
+      key,
+      label,
+      average,
+      displayAverage: formatAverageRating(average),
+    }
+  })
+
+  const overallAverageValue =
+    feedbackList.reduce((sum, feedback) => sum + calculateFeedbackAverage(feedback), 0) /
+    feedbackList.length
+
+  return {
+    submissionCount: feedbackList.length,
+    overallAverage: formatAverageRating(overallAverageValue),
+    categoryAverages,
+    latestFeedback: feedbackList[0],
+  }
+}
+
+export function formatFeedbackTimestamp(timestamp) {
+  if (!timestamp) {
+    return '—'
+  }
+
+  const date = typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
+
+  if (Number.isNaN(date.getTime())) {
+    return '—'
+  }
+
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}

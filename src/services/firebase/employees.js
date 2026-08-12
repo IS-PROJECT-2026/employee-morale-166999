@@ -1,6 +1,8 @@
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   serverTimestamp,
@@ -92,6 +94,22 @@ export function isEmployeeProfileComplete(employee) {
 export async function getEmployeeByUserId(userId) {
   const snapshot = await getDoc(getEmployeeDocRef(userId))
   return mapEmployeeDoc(snapshot)
+}
+
+export async function getAllEmployees() {
+  const snapshot = await getDocs(collection(getDbInstance(), EMPLOYEES_COLLECTION))
+
+  return snapshot.docs
+    .map(mapEmployeeDoc)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const nameCompare = (a.fullName || a.email).localeCompare(b.fullName || b.email)
+      if (nameCompare !== 0) {
+        return nameCompare
+      }
+
+      return a.email.localeCompare(b.email)
+    })
 }
 
 export async function createEmployeeIfNotExists(user) {

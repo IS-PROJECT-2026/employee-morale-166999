@@ -1,17 +1,30 @@
 import { useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import LogoIcon from '../Logo/LogoIcon'
 import { useAuth } from '../../context/useAuth'
 import { useEmployee } from '../../context/useEmployee'
 import { isAdminUser } from '../../utils/roles'
 import './ManagementLayout.css'
 
-const navItems = [{ label: 'Management Insights', to: '/management' }]
+const navItems = [
+  { label: 'Management Insights', to: '/management', end: true },
+  {
+    label: 'Employee Feedback',
+    to: '/management/employees',
+    match: (pathname) => pathname.startsWith('/management/employees'),
+  },
+  {
+    label: 'Rating Categories',
+    to: '/management/categories',
+    match: (pathname) => pathname.startsWith('/management/categories'),
+  },
+]
 
 function ManagementLayout({ children }) {
   const { user, logout } = useAuth()
   const { employee } = useEmployee()
   const navigate = useNavigate()
+  const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
 
   const displayName = user?.displayName || user?.email || 'Manager'
@@ -41,9 +54,14 @@ function ManagementLayout({ children }) {
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
-                    className={({ isActive }) =>
-                      `management-layout__link${isActive ? ' management-layout__link--active' : ''}`
-                    }
+                    end={item.end}
+                    className={({ isActive }) => {
+                      const active = item.match ? item.match(location.pathname) : isActive
+
+                      return `management-layout__link${
+                        active ? ' management-layout__link--active' : ''
+                      }`
+                    }}
                   >
                     {item.label}
                   </NavLink>
@@ -58,7 +76,7 @@ function ManagementLayout({ children }) {
 
             <div className="management-layout__actions">
               <span className="management-layout__role">
-                {isAdminUser(employee) ? 'Admin' : 'Manager'}
+                {isAdminUser(employee) ? 'Administrator' : 'Manager'}
               </span>
               <span className="management-layout__user">{displayName}</span>
               <button

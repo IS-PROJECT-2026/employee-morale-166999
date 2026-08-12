@@ -3,10 +3,12 @@ import { useAuth } from './useAuth'
 import { RatingCategoriesContext } from './ratingCategoriesContext'
 import {
   createRatingCategory,
+  deleteRatingCategory,
   getActiveRatingCategories,
   getAllRatingCategories,
   getCategoryErrorMessage,
   seedDefaultRatingCategories,
+  updateRatingCategory,
 } from '../services/firebase/ratingCategories'
 
 export function RatingCategoriesProvider({ children }) {
@@ -110,6 +112,40 @@ export function RatingCategoriesProvider({ children }) {
           const message = getCategoryErrorMessage(err)
           setError(message)
           return { category: null, error: message }
+        }
+      },
+      updateCategory: async (categoryId, { name, description }) => {
+        if (!user) {
+          return { category: null, error: 'You must be signed in to update a category.' }
+        }
+
+        setError(null)
+
+        try {
+          const category = await updateRatingCategory(categoryId, { name, description })
+          const refreshed = await loadCategories(user.uid)
+          return { category, ...refreshed, error: null }
+        } catch (err) {
+          const message = getCategoryErrorMessage(err)
+          setError(message)
+          return { category: null, error: message }
+        }
+      },
+      deleteCategory: async (categoryId) => {
+        if (!user) {
+          return { error: 'You must be signed in to delete a category.' }
+        }
+
+        setError(null)
+
+        try {
+          await deleteRatingCategory(categoryId)
+          const refreshed = await loadCategories(user.uid)
+          return { ...refreshed, error: null }
+        } catch (err) {
+          const message = getCategoryErrorMessage(err)
+          setError(message)
+          return { error: message }
         }
       },
     }),

@@ -1,9 +1,12 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { db } from './config'
@@ -223,6 +226,87 @@ export function computeManagementAnalytics(feedbackList, categories) {
   }
 }
 
+function toLocalDateKey(timestamp) {
+  if (!timestamp) {
+    return null
+  }
+
+  const date = typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
+
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function formatChartDayLabel(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export function computeDailyFeedbackTrend(feedbackList, categories, dayCount = 14) {
+  if (!categories.length || dayCount < 1) {
+    return []
+  }
+
+  const totalsByDay = {}
+
+  feedbackList.forEach((feedback) => {
+    const dateKey = toLocalDateKey(feedback.createdAt)
+
+    if (!dateKey) {
+      return
+    }
+
+    if (!totalsByDay[dateKey]) {
+      totalsByDay[dateKey] = {
+        submissions: 0,
+        ratingTotal: 0,
+      }
+    }
+
+    totalsByDay[dateKey].submissions += 1
+    totalsByDay[dateKey].ratingTotal += calculateFeedbackAverage(feedback, categories)
+  })
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const days = []
+
+  for (let offset = dayCount - 1; offset >= 0; offset -= 1) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - offset)
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateKey = `${year}-${month}-${day}`
+    const dayTotals = totalsByDay[dateKey]
+
+    days.push({
+      dateKey,
+      label: formatChartDayLabel(dateKey),
+      submissions: dayTotals?.submissions || 0,
+      averageRating: dayTotals ? dayTotals.ratingTotal / dayTotals.submissions : null,
+      displayAverage:
+        dayTotals != null ? formatAverageRating(dayTotals.ratingTotal / dayTotals.submissions) : null,
+    })
+  }
+
+  return days
+}
+
 export async function createFeedback(userId, feedbackData, categories) {
   const ratings = {}
 
@@ -288,6 +372,27 @@ export async function getAllFeedback() {
   return snapshot.docs
     .map(mapFeedbackDoc)
     .sort((a, b) => getTimestampMillis(b.createdAt) - getTimestampMillis(a.createdAt))
+}
+
+export async function updateFeedback(feedbackId, feedbackData, categories) {
+  const ratings = {}
+
+  categories.forEach((category) => {
+    ratings[category.key] = feedbackData.ratings[category.key]
+  })
+
+  const payload = {
+    ratings,
+    comment: feedbackData.comment?.trim() || '',
+  }
+
+  await updateDoc(doc(getDbInstance(), FEEDBACK_COLLECTION, feedbackId), payload)
+
+  return { id: feedbackId, ...payload }
+}
+
+export async function deleteFeedback(feedbackId) {
+  await deleteDoc(doc(getDbInstance(), FEEDBACK_COLLECTION, feedbackId))
 }
 
 export function buildInitialRatings(categories) {

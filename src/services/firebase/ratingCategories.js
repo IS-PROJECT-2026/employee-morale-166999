@@ -1,9 +1,13 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { db } from './config'
@@ -53,6 +57,8 @@ const CATEGORY_ERROR_MESSAGES = {
   'categories/not-configured': 'Firestore is not configured.',
   'categories/duplicate': 'A category with this name already exists.',
   'categories/invalid-name': 'Category name is required.',
+  'categories/not-found': 'Rating category not found.',
+  'categories/cannot-delete-default': 'Default categories cannot be deleted.',
   'categories/permission-denied': 'You do not have permission to manage rating categories.',
 }
 
@@ -214,4 +220,72 @@ export async function createRatingCategory({ name, description, createdBy }) {
     createdBy,
     createdAt: new Date(),
   }
+}
+
+export async function updateRatingCategory(categoryId, { name, description }) {
+  const trimmedName = name.trim()
+
+  if (!trimmedName) {
+    const error = new Error('Category name is required.')
+    error.code = 'categories/invalid-name'
+    throw error
+  }
+
+  const docRef = doc(getDbInstance(), RATING_CATEGORIES_COLLECTION, categoryId)
+  const snapshot = await getDoc(docRef)
+
+  if (!snapshot.exists()) {
+    const error = new Error('Rating category not found.')
+    error.code = 'categories/not-found'
+    throw error
+  }
+
+  const current = mapCategoryDoc(snapshot)
+  const normalizedName = trimmedName.toLowerCase()
+  const duplicate = (await getAllRatingCategories()).find(
+    (category) =>
+      category.id !== categoryId &&
+      (category.name.trim().toLowerCase() === normalizedName ||
+        slugifyCategoryName(category.name) === slugifyCategoryName(trimmedName)),
+  )
+
+  if (duplicate) {
+    const error = new Error('A category with this name already exists.')
+    error.code = 'categories/duplicate'
+    throw error
+  }
+
+  await updateDoc(docRef, {
+    name: trimmedName,
+    description: description?.trim() || '',
+  })
+
+  return {
+    ...current,
+    name: trimmedName,
+    description: description?.trim() || '',
+  }
+}
+
+export async function deleteRatingCategory(categoryId) {
+  const docRef = doc(getDbInstance(), RATING_CATEGORIES_COLLECTION, categoryId)
+  const snapshot = await getDoc(docRef)
+
+  if (!snapshot.exists()) {
+    const error = new Error('Rating category not found.')
+    error.code = 'categories/not-found'
+    throw error
+  }
+
+  const current = mapCategoryDoc(snapshot)
+
+  if (current.isDefault) {
+    const error = new Error('Default categories cannot be deleted.')
+    error.code = 'categories/cannot-delete-default'
+    throw error
+  }
+
+  await deleteDoc(docRef)
+
+  return current
 }

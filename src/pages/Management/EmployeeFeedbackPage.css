@@ -1,0 +1,17 @@
+.employee-feedback-page__back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+.employee-feedback-page__back:hover {
+  color: #4338ca;
+}
+
+.employee-feedback-page__header {
+  margin-bottom: 1.5rem;
+}

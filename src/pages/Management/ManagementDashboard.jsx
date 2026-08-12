@@ -1,35 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import ManagementLayout from '../../components/management/ManagementLayout'
+import DailyFeedbackChart from '../../components/management/DailyFeedbackChart'
+import RecentFeedbackList from '../../components/management/RecentFeedbackList'
 import { useAuth } from '../../context/useAuth'
-import { useEmployee } from '../../context/useEmployee'
 import { useRatingCategories } from '../../context/useRatingCategories'
+import { getAllEmployees, getEmployeeErrorMessage } from '../../services/firebase/employees'
 import {
-  calculateFeedbackAverage,
+  computeDailyFeedbackTrend,
   computeManagementAnalytics,
-  formatAverageRating,
-  formatFeedbackTimestamp,
   getAllFeedback,
   getFeedbackErrorMessage,
-  getRatingValue,
 } from '../../services/firebase/feedback'
-import { isAdminUser } from '../../utils/roles'
 import '../../components/auth/AuthLayout.css'
 import '../../components/management/ManagementLayout.css'
+import '../../components/management/EmployeeFeedbackDetail.css'
+import '../../components/management/DailyFeedbackChart.css'
 import './ManagementDashboard.css'
 
-function ManagementBar({ label, average, displayAverage, responseCount }) {
+function MetricRow({ label, average, displayAverage }) {
   return (
-    <div className="management-bar">
-      <div className="management-bar__header">
-        <span className="management-bar__label">{label}</span>
-        <span className="management-bar__score">
-          {displayAverage.displayScore}/5 · {displayAverage.label}
-          {responseCount != null ? ` · ${responseCount} responses` : ''}
-        </span>
+    <div className="insights-metric">
+      <div className="insights-metric__top">
+        <span className="insights-metric__label">{label}</span>
+        <span className="insights-metric__value">{displayAverage.displayScore}</span>
       </div>
-      <div className="management-bar__track">
+      <div className="insights-metric__track">
         <div
-          className="management-bar__fill"
+          className="insights-metric__fill"
           style={{ width: `${(average / 5) * 100}%` }}
         />
       </div>
@@ -39,18 +37,12 @@ function ManagementBar({ label, average, displayAverage, responseCount }) {
 
 function ManagementDashboard() {
   const { user } = useAuth()
-  const { employee } = useEmployee()
-  const { allCategories, addCategory, refreshCategories, loading: categoriesLoading } =
-    useRatingCategories()
+  const { allCategories, loading: categoriesLoading } = useRatingCategories()
 
+  const [employees, setEmployees] = useState([])
   const [feedbackList, setFeedbackList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [categoryName, setCategoryName] = useState('')
-  const [categoryDescription, setCategoryDescription] = useState('')
-  const [categoryError, setCategoryError] = useState('')
-  const [categorySuccess, setCategorySuccess] = useState('')
-  const [savingCategory, setSavingCategory] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -64,14 +56,17 @@ function ManagementDashboard() {
       setError('')
 
       try {
-        const results = await getAllFeedback()
+        const [results, employeeResults] = await Promise.all([getAllFeedback(), getAllEmployees()])
+
         if (!cancelled) {
           setFeedbackList(results)
+          setEmployees(employeeResults)
         }
       } catch (err) {
         if (!cancelled) {
-          setError(getFeedbackErrorMessage(err))
+          setError(getFeedbackErrorMessage(err) || getEmployeeErrorMessage(err))
           setFeedbackList([])
+          setEmployees([])
         }
       } finally {
         if (!cancelled) {
@@ -92,250 +87,160 @@ function ManagementDashboard() {
     [feedbackList, allCategories],
   )
 
-  const latestAverage = analytics.latestFeedback
-    ? formatAverageRating(calculateFeedbackAverage(analytics.latestFeedback, allCategories))
-    : null
+  const dailyTrend = useMemo(
+    () => computeDailyFeedbackTrend(feedbackList, allCategories),
+    [feedbackList, allCategories],
+  )
 
-  const handleAddCategory = async (event) => {
-    event.preventDefault()
-    setCategoryError('')
-    setCategorySuccess('')
+  const hasDailyActivity = dailyTrend.some(
+    (day) => day.submissions > 0 || day.averageRating != null,
+  )
 
-    if (!categoryName.trim()) {
-      setCategoryError('Category name is required.')
-      return
+  const topCategory = useMemo(() => {
+    if (!analytics.categoryAverages.length) {
+      return null
     }
 
-    setSavingCategory(true)
+    return [...analytics.categoryAverages].sort((a, b) => b.average - a.average)[0]
+  }, [analytics.categoryAverages])
 
-    const { error: saveError } = await addCategory({
-      name: categoryName,
-      description: categoryDescription,
-    })
-
-    setSavingCategory(false)
-
-    if (saveError) {
-      setCategoryError(saveError)
-      return
-    }
-
-    setCategorySuccess('Category added successfully.')
-    setCategoryName('')
-    setCategoryDescription('')
-    await refreshCategories()
-  }
+  const employeeLookup = useMemo(() => {
+    return employees.reduce((accumulator, item) => {
+      accumulator[item.userId] = item
+      return accumulator
+    }, {})
+  }, [employees])
 
   const pageLoading = loading || categoriesLoading
+  const overallScore = analytics.submissionCount ? analytics.overallAverage.displayScore : '—'
 
   return (
     <ManagementLayout>
-      <div className="management-panel">
-        <header className="management-header">
-          <p className="management-header__eyebrow">Management Insights</p>
-          <h1 className="management-header__title">Workplace Feedback Overview</h1>
-          <p className="management-header__text">
-            Organization-wide feedback summaries calculated dynamically from employee
-            submissions in Firestore.
-          </p>
-        </header>
-
+      <div className="insights-page">
         {error && (
-          <div className="auth-alert management-panel__alert" role="alert">
+          <div className="auth-alert insights-page__alert" role="alert">
             {error}
           </div>
         )}
 
         {pageLoading ? (
-          <div className="auth-loading management-loading" role="status" aria-live="polite">
+          <div className="auth-loading insights-page__loading" role="status" aria-live="polite">
             <div className="auth-loading__spinner" aria-hidden="true" />
             <p>Loading management insights…</p>
           </div>
         ) : (
           <>
-            <section className="management-stats" aria-label="Overview">
-              <div className="management-stat">
-                <span className="management-stat__label">Total submissions</span>
-                <span className="management-stat__value">{analytics.submissionCount}</span>
-                <span className="management-stat__detail">All employee feedback entries</span>
-              </div>
-              <div className="management-stat">
-                <span className="management-stat__label">Overall average</span>
-                <span className="management-stat__value">
-                  {analytics.submissionCount
-                    ? `${analytics.overallAverage.displayScore}/5`
-                    : '—'}
-                </span>
-                <span className="management-stat__detail">
-                  {analytics.submissionCount ? analytics.overallAverage.label : 'No data yet'}
-                </span>
-              </div>
-              <div className="management-stat">
-                <span className="management-stat__label">Latest submission</span>
-                <span className="management-stat__value">
-                  {analytics.latestFeedback
-                    ? formatFeedbackTimestamp(analytics.latestFeedback.createdAt)
-                    : '—'}
-                </span>
-                <span className="management-stat__detail">
-                  {latestAverage
-                    ? `Average ${latestAverage.displayScore}/5`
-                    : 'Waiting for first submission'}
-                </span>
-              </div>
-            </section>
-
-            <section className="management-section">
-              <div className="management-section__header">
-                <div>
-                  <h2 className="management-section__title">Rating averages</h2>
-                  <p className="management-section__text">
-                    Average score for each active feedback category across all submissions.
-                  </p>
-                </div>
-              </div>
-
-              {analytics.submissionCount === 0 ? (
-                <div className="management-empty">No feedback submissions yet.</div>
-              ) : (
-                <div className="management-bars">
-                  {analytics.categoryAverages.map((category) => (
-                    <ManagementBar
-                      key={category.key}
-                      label={category.label}
-                      average={category.average}
-                      displayAverage={category.displayAverage}
-                      responseCount={category.responseCount}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="management-section">
-              <div className="management-section__header">
-                <div>
-                  <h2 className="management-section__title">Recent feedback</h2>
-                  <p className="management-section__text">
-                    Latest employee comments and rating summaries.
-                  </p>
-                </div>
-              </div>
-
-              {analytics.recentFeedback.length === 0 ? (
-                <div className="management-empty">No recent feedback to display.</div>
-              ) : (
-                <div className="management-recent-list">
-                  {analytics.recentFeedback.map((feedback) => {
-                    const average = formatAverageRating(
-                      calculateFeedbackAverage(feedback, allCategories),
-                    )
-
-                    return (
-                      <article key={feedback.id} className="management-recent-card">
-                        <div className="management-recent-card__meta">
-                          <span>{formatFeedbackTimestamp(feedback.createdAt)}</span>
-                          <span className="management-recent-card__average">
-                            Average: {average.displayScore}/5 — {average.label}
-                          </span>
-                        </div>
-                        <div className="management-recent-card__ratings">
-                          {allCategories.slice(0, 4).map((category) => (
-                            <span key={category.key}>
-                              {category.name}: {getRatingValue(feedback, category.key) ?? '—'}/5
-                            </span>
-                          ))}
-                        </div>
-                        {feedback.comment ? (
-                          <p className="management-recent-card__comment">{feedback.comment}</p>
-                        ) : (
-                          <p className="management-recent-card__comment management-recent-card__comment--empty">
-                            No comment provided.
-                          </p>
-                        )}
-                      </article>
-                    )
-                  })}
-                </div>
-              )}
-            </section>
-
-            <section className="management-section">
-              <div className="management-section__header">
-                <div>
-                  <h2 className="management-section__title">Rating categories</h2>
-                  <p className="management-section__text">
-                    Active categories available in the employee feedback form.
-                  </p>
-                </div>
-              </div>
-
-              <div className="management-category-list">
-                {allCategories.map((category) => (
-                  <div key={category.id} className="management-category-item">
-                    <div>
-                      <span className="management-category-item__name">{category.name}</span>
-                      {category.description && (
-                        <p className="management-category-item__description">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
-                    <span className="management-category-item__badge">
-                      {category.isDefault ? 'Default' : 'Custom'}
+            <div className="insights-shell">
+              <div className="insights-shell__card">
+                <header className="insights-shell__header">
+                  <div className="insights-shell__intro">
+                    <span className="insights-shell__avatar" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 12a4 4 0 100-8 4 4 0 000 8zM6 20a6 6 0 0112 0"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                        />
+                      </svg>
                     </span>
+                    <div>
+                      <h1 className="insights-shell__title">Category rating averages</h1>
+                      <p className="insights-shell__subtitle">
+                        Average scores from all employee feedback submissions
+                      </p>
+                    </div>
                   </div>
-                ))}
+                  <div className="insights-shell__avg">
+                    <span className="insights-shell__avg-label">Overall average rating</span>
+                    <span className="insights-shell__avg-value">{overallScore}</span>
+                  </div>
+                </header>
+
+                {analytics.submissionCount === 0 ? (
+                  <div className="insights-empty">No feedback submissions yet.</div>
+                ) : (
+                  <>
+                    <div className="insights-shell__metrics">
+                      {analytics.categoryAverages.map((category) => (
+                        <MetricRow
+                          key={category.key}
+                          label={category.label}
+                          average={category.average}
+                          displayAverage={category.displayAverage}
+                        />
+                      ))}
+                    </div>
+
+                    {hasDailyActivity && (
+                      <DailyFeedbackChart dailyData={dailyTrend} />
+                    )}
+
+                    <div className="insights-shell__footer">
+                      <div className="insights-mini-stat">
+                        <span className="insights-mini-stat__icon insights-mini-stat__icon--purple" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M12 3l2.4 4.86 5.36.78-3.88 3.78.92 5.34L12 15.9l-4.8 2.52.92-5.34-3.88-3.78 5.36-.78L12 3z"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="insights-mini-stat__label">
+                            {topCategory ? topCategory.label : 'Top category'}
+                          </span>
+                          <strong className="insights-mini-stat__value">
+                            {topCategory ? topCategory.displayAverage.displayScore : '—'}
+                          </strong>
+                        </div>
+                      </div>
+                      <Link
+                        to="/management/employees"
+                        className="insights-mini-stat insights-mini-stat--link"
+                      >
+                        <span className="insights-mini-stat__icon insights-mini-stat__icon--pink" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M7 9h10M7 13h6M5 4h14a2 2 0 012 2v10a2 2 0 01-2 2H9l-4 3v-3H5a2 2 0 01-2-2V6a2 2 0 012-2z"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <div>
+                          <span className="insights-mini-stat__label">Total feedback</span>
+                          <strong className="insights-mini-stat__value">
+                            {analytics.submissionCount}
+                          </strong>
+                        </div>
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <section className="insights-recent">
+              <div className="insights-recent__header">
+                <h2>Recent feedback</h2>
+                <p>Latest submissions — click to view full details.</p>
               </div>
 
-              {isAdminUser(employee) ? (
-                <form className="management-category-form auth-form" onSubmit={handleAddCategory}>
-                  <h3 className="management-category-form__title">Add category</h3>
-
-                  {categorySuccess && (
-                    <div className="employee-success" role="status">
-                      {categorySuccess}
-                    </div>
-                  )}
-
-                  {categoryError && (
-                    <div className="auth-alert" role="alert">
-                      {categoryError}
-                    </div>
-                  )}
-
-                  <div className="auth-field">
-                    <label htmlFor="category-name">Category name</label>
-                    <input
-                      id="category-name"
-                      type="text"
-                      value={categoryName}
-                      onChange={(event) => setCategoryName(event.target.value)}
-                      disabled={savingCategory}
-                      placeholder="e.g. Career Growth"
-                    />
-                  </div>
-
-                  <div className="auth-field">
-                    <label htmlFor="category-description">Description (optional)</label>
-                    <textarea
-                      id="category-description"
-                      value={categoryDescription}
-                      onChange={(event) => setCategoryDescription(event.target.value)}
-                      disabled={savingCategory}
-                      placeholder="Describe what employees should rate."
-                      rows={3}
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary" disabled={savingCategory}>
-                    {savingCategory ? 'Saving…' : 'Add Category'}
-                  </button>
-                </form>
+              {feedbackList.length === 0 ? (
+                <div className="insights-empty insights-empty--compact">
+                  No recent feedback to display.
+                </div>
               ) : (
-                <p className="management-section__text">
-                  Only admins can add new rating categories.
-                </p>
+                <RecentFeedbackList
+                  feedbackList={feedbackList}
+                  employeeLookup={employeeLookup}
+                  categories={allCategories}
+                />
               )}
             </section>
           </>

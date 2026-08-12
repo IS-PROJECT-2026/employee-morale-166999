@@ -46,6 +46,17 @@ service cloud.firestore {
         && data.createdBy == request.auth.uid;
     }
 
+    function isValidCategoryUpdate() {
+      let data = request.resource.data;
+      return data.name is string
+        && data.name.size() > 0
+        && data.description is string
+        && data.key == resource.data.key
+        && data.active == resource.data.active
+        && data.isDefault == resource.data.isDefault
+        && data.createdBy == resource.data.createdBy;
+    }
+
     match /employees/{userId} {
       allow read: if request.auth != null && (
         request.auth.uid == userId || isManagementUser()
@@ -79,7 +90,8 @@ service cloud.firestore {
     match /ratingCategories/{categoryId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && isAdminUser() && isValidCategoryCreate();
-      allow update, delete: if false;
+      allow update: if request.auth != null && isAdminUser() && isValidCategoryUpdate();
+      allow delete: if request.auth != null && isAdminUser() && resource.data.isDefault == false;
     }
   }
 }

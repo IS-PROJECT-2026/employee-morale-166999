@@ -9,7 +9,7 @@ import { RatingCategoriesProvider } from './context/RatingCategoriesContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/employee-morale-166999">
       <AuthProvider>
         <EmployeeProvider>
           <RatingCategoriesProvider>

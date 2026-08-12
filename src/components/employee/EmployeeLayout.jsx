@@ -6,7 +6,8 @@ import './EmployeeLayout.css'
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'My Profile', to: '/profile' },
+  { label: 'Give Feedback', to: '/feedback' },
+  { label: 'My Feedback', to: '/my-feedback' },
 ]
 
 function EmployeeLayout({ children }) {
@@ -58,6 +59,17 @@ function EmployeeLayout({ children }) {
                   </NavLink>
                 </li>
               ))}
+              <li>
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    `employee-layout__link${isActive ? ' employee-layout__link--active' : ''}`
+                  }
+                  onClick={closeMenu}
+                >
+                  My Profile
+                </NavLink>
+              </li>
             </ul>
 
             <div className="employee-layout__actions">

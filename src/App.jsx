@@ -4,6 +4,8 @@ import Login from './pages/Login/Login'
 import SignUp from './pages/SignUp/SignUp'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Profile from './pages/Profile/Profile'
+import Feedback from './pages/Feedback/Feedback'
+import MyFeedback from './pages/MyFeedback/MyFeedback'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicAuthRoute from './components/auth/PublicAuthRoute'
 
@@ -40,6 +42,22 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/feedback"
+        element={
+          <ProtectedRoute>
+            <Feedback />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-feedback"
+        element={
+          <ProtectedRoute>
+            <MyFeedback />
           </ProtectedRoute>
         }
       />

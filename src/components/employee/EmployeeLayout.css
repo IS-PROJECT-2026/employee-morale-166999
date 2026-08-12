@@ -180,6 +180,15 @@
   border-radius: var(--radius-md);
 }
 
+.employee-success a {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.employee-success a:hover {
+  color: #166534;
+}
+
 .employee-profile-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

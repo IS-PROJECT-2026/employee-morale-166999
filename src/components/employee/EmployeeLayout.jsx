@@ -7,6 +7,8 @@ import './EmployeeLayout.css'
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'My Profile', to: '/profile' },
+  { label: 'Give Feedback', to: '/feedback' },
+  { label: 'My Feedback', to: '/my-feedback' },
 ]
 
 function EmployeeLayout({ children }) {

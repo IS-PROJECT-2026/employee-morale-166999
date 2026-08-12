@@ -1,16 +1,54 @@
-# React + Vite
+# Employee Morale Management System
+## Deployment Link: https://is-project-2026.github.io/employee-morale-166999/
+## Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The Employee Morale Management System is a web application that allows employees to provide workplace feedback while enabling management to monitor employee morale and workplace satisfaction through summarized insights.
 
-Currently, two official plugins are available:
+## Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Firebase email/password authentication
+- Employee profile management
+- Workplace feedback submission
+- 1–5 rating system
+- Written feedback and comments
+- Feedback history
+- Personal rating dashboard
+- Management insights dashboard
+- Employee rating and comment review
+- Admin management of rating categories
+- Firestore data storage and retrieval
+- Role-based access control
+- Responsive user interface
 
-## React Compiler
+## Technologies Used
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Frontend
+- React
+- JavaScript
+- Vite
+- CSS
 
-## Expanding the ESLint configuration
+### Backend & Database
+- Firebase Authentication
+- Firebase Firestore
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## System Users
+
+### Employees
+- Create an account and log in
+- Manage their profile
+- Submit workplace ratings and comments
+- View previous feedback
+- View rating averages
+
+### Management/Admin
+- View employee morale insights
+- View rating averages
+- Review employee feedback
+- View employee ratings and comments
+- Add new rating categories
+
+## Purpose
+
+The system provides a centralized platform for collecting employee feedback and generating useful workplace insights to help management understand employee morale and identify areas for improvement.

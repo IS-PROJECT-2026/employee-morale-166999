@@ -74,6 +74,22 @@ export function isValidRating(value) {
   return Number.isInteger(value) && value >= 1 && value <= 5
 }
 
+export function calculateFeedbackAverage(feedback) {
+  const total = FEEDBACK_CATEGORIES.reduce((sum, { key }) => sum + (feedback[key] || 0), 0)
+  return total / FEEDBACK_CATEGORIES.length
+}
+
+export function formatAverageRating(average) {
+  const score = Math.round(average * 10) / 10
+  const labelKey = Math.min(5, Math.max(1, Math.round(average)))
+
+  return {
+    score,
+    displayScore: Number.isInteger(score) ? String(score) : score.toFixed(1),
+    label: RATING_LABELS[labelKey],
+  }
+}
+
 export function mapFeedbackDoc(snapshot) {
   const data = snapshot.data()
 

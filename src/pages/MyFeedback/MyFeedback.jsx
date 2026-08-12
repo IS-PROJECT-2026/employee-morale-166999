@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import EmployeeLayout from '../../components/employee/EmployeeLayout'
 import { useAuth } from '../../context/useAuth'
 import {
+  calculateFeedbackAverage,
   FEEDBACK_CATEGORIES,
+  formatAverageRating,
   getFeedbackByUserId,
   getFeedbackErrorMessage,
   RATING_LABELS,
@@ -33,6 +35,8 @@ function formatSubmissionDate(timestamp) {
 }
 
 function FeedbackHistoryCard({ feedback }) {
+  const average = formatAverageRating(calculateFeedbackAverage(feedback))
+
   return (
     <article className="feedback-history-card">
       <div className="feedback-history-card__header">
@@ -40,8 +44,7 @@ function FeedbackHistoryCard({ feedback }) {
           {formatSubmissionDate(feedback.createdAt)}
         </time>
         <span className="feedback-history-card__overall">
-          Overall: {feedback.overallSatisfaction}/5 —{' '}
-          {RATING_LABELS[feedback.overallSatisfaction]}
+          Average: {average.displayScore}/5 — {average.label}
         </span>
       </div>
 

@@ -1,3 +1,3 @@
 # Conflict 2 Demo
 
-This file is used to demonstrate a delete-versus-modify merge conflict.
+This file has been updated to demonstrate how Git handles conflicting changes.

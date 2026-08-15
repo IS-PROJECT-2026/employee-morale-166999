@@ -63,7 +63,8 @@ Demonstrate your workflow mechanics by embedding your screenshots below.
 
 _Provide a screenshot showing your active milestone(s) and the granular tracking issues linked directly to them._
 
-(!!!!!!!!!!!!!!!!!!!!!!)
+<img width="940" height="416" alt="image" src="https://github.com/user-attachments/assets/3c87c41a-0b64-44ac-984e-171b5cba40f2" />
+
 
 - **Caption:** The project was organized into four milestones covering the project foundation, authentication and employee management, employee feedback and morale, and the HR dashboard and deployment, with all issues closed and completed.
 
@@ -71,7 +72,8 @@ _Provide a screenshot showing your active milestone(s) and the granular tracking
 
 _Provide a screenshot of your GitHub Project Board with your issues organized dynamically across columns (To Do, In Progress, Done)._
 
-(!!!!!!!!!!!!!!!!!!!!!!!!!)
+<img width="940" height="446" alt="image" src="https://github.com/user-attachments/assets/2262d9ab-02d9-40b1-9729-0c3ed0d08bab" />
+
 
 - **Caption:** The project board shows 12 issues completed and 1 issue currently in progress, with 2 issues still in the Todo column. This shows that most of the planned work has been completed, while the remaining tasks are being finalized for submission.
 
@@ -79,7 +81,8 @@ _Provide a screenshot of your GitHub Project Board with your issues organized dy
 
 _Provide a screenshot showing your local or remote Git branch list, highlighting your use of conventional, issue-linked naming patterns (e.g., `feat/`, `fix/`, `style/`)._
 
-(!!!!!!!!!!!!!!!!!!!!!!!!)
+<img width="940" height="399" alt="image" src="https://github.com/user-attachments/assets/ce564cbb-7683-43aa-aeed-d0efc15b8b7b" />
+
 
 - **Caption:** I used feat/, fix/, and style/ branches for the main development, bug fixes, and UI. docs/ and chore/ branches handled documentation, setup, and submission-related tasks, while conflict/ branches were created for the merge-conflict demonstrations and evidence. Each branch follows an issue-linked naming pattern, making the work easy to trace.
 
@@ -87,7 +90,8 @@ _Provide a screenshot showing your local or remote Git branch list, highlighting
 
 _Provide a screenshot of a completed or open Pull Request (PR) on GitHub that clearly shows it is linked to a related development issue._
 
-(!!!!!!!!!!!!!!!!!!!!!!!!!!)
+<img width="940" height="450" alt="image" src="https://github.com/user-attachments/assets/aa253057-55a0-4614-b311-73e7eede3dd8" />
+
 
 - **Caption:** Pull Request #30 implements the management insights dashboard and rating-category management, with Closes #13 linking the completed work directly to Issue #13.
 
@@ -109,7 +113,8 @@ You must engineer **three merge conflicts**, each triggered by a **different cau
 
 _Screenshot showing the merge attempt and the conflict warning._
 
-[PASTE SCREENSHOT OF ATTEMPTED MERGE / TERMINAL WARNING HERE]
+<img width="940" height="297" alt="image" src="https://github.com/user-attachments/assets/c42cef81-8844-4865-b496-2b18735ca8d8" />
+
 
 - **Caption:** Branch conflict/15-readme-description-alt attempted to merge changes from conflict/15-readme-description. Both branches modified the same Deployment Link line differently, causing Git to report a content conflict and stop the automatic merge.
 
@@ -117,7 +122,8 @@ _Screenshot showing the merge attempt and the conflict warning._
 
 _Screenshot showing the raw, unresolved conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>>`) in your editor._
 
-[PASTE SCREENSHOT OF RAW CONFLICT MARKERS HERE]
+<img width="940" height="242" alt="image" src="https://github.com/user-attachments/assets/63a06544-15be-4920-b575-1692456daedb" />
+
 
 - **Caption:** Both branches modified the same Deployment Link line in README.md with different text. Git could not automatically determine which version to keep, so it marked the sections as conflicting.
 
@@ -125,7 +131,8 @@ _Screenshot showing the raw, unresolved conflict markers (`<<<<<<< HEAD`, `=====
 
 _Screenshot of your clean Git history or completed PR showing the conflict was resolved and merged._
 
-[PASTE SCREENSHOT OF CLEAN RESOLUTION HERE]
+<img width="940" height="356" alt="image" src="https://github.com/user-attachments/assets/1c6429ca-2767-4845-80e1-9507620b2d3e" />
+
 
 - **Caption:** The conflict was resolved by keeping the “Employee Morale System - Live Demo” version in README.md. The resolved file was committed, and the Git history confirms that both branches were successfully merged with no remaining conflicts.
 
@@ -137,7 +144,8 @@ _Screenshot of your clean Git history or completed PR showing the conflict was r
 
 **Why does this cause trigger a conflict?** One branch deletes a file, while another branch modifies the same file. Git cannot automatically determine whether the file should be deleted or retained with the modifications.
 
-[PASTE SCREENSHOT OF CONFLICT MARKERS FOR CONFLICT 2 HERE]
+<img width="940" height="61" alt="image" src="https://github.com/user-attachments/assets/85acf232-3050-47af-ac71-10412f2c1cd0" />
+
 
 - **Caption:** The conflict/15-update-demo branch modified docs/conflict-2-demo.md, while conflict/15-delete-vs-modify-delete deleted the same file. Git detected a modify/delete conflict and stopped the merge. I chose to leave the modified version in the working tree.
 
@@ -149,7 +157,8 @@ _Screenshot of your clean Git history or completed PR showing the conflict was r
 
 **Why does this cause trigger a conflict?** Two branches add different names like Bob and Alice to the same location at the end of the list. Git sees both additions as competing changes to the same location, so it cannot automatically decide which one should come first.
 
-[PASTE SCREENSHOT OF CONFLICT MARKERS FOR CONFLICT 3 HERE]
+<img width="940" height="201" alt="image" src="https://github.com/user-attachments/assets/90f079b7-b3e0-4ff2-82a5-2fb93cad00e1" />
+
 
 - **Caption:** Two different branches appended different names (Alice and Bob) to the bottom of docs/conflict-3-list.md, causing Git to mark the overlapping additions as a conflict.
 

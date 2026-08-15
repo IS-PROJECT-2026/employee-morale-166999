@@ -1,5 +1,5 @@
 # Employee Morale Management System
-## Deployment Link: https://is-project-2026.github.io/employee-morale-166999/
+## Deployment Link: Live Employee Morale System
 ## Overview
 
 The Employee Morale Management System is a web application that allows employees to provide workplace feedback while enabling management to monitor employee morale and workplace satisfaction through summarized insights.

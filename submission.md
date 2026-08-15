@@ -25,7 +25,7 @@
 Paste the URL of the commit in your history that you think best demonstrates clean conventional commit practice (good type tag, clear subject, meaningful body or footer).
 
 - **Commit URL:** [https://github.com/IS-PROJECT-2026/employee-morale-166999/commit/fa6679abcfb1eccf442e2565efaa4f91fe5c1ba8]
-- **Why this one?** I chose this commit because it uses the feat tag to clearly identify the change as a new feature, while the subject, add management insights, briefly and clearly describes the work. The body explains the key features implemented, including feedback summaries, rating averages, recent comments, and admin rating category management. Finally, Closes #13 links the commit directly to Issue #13, making the work easy to trace.
+- **Why this one?** I chose this commit because it uses the feat tag to clearly identify the change as a new feature, while the subject, add management insights, briefly and clearly describes the work. The body explains the key features implemented, including feedback summaries, rating averages, recent comments, and admin rating-category management. Finally, Closes #13 links the commit directly to Issue #13, making the work easy to trace.
 
 ### B. A Mistake or Struggle
 
@@ -63,7 +63,8 @@ Demonstrate your workflow mechanics by embedding your screenshots below.
 
 _Provide a screenshot showing your active milestone(s) and the granular tracking issues linked directly to them._
 
-<img width="940" height="416" alt="image" src="https://github.com/user-attachments/assets/3c87c41a-0b64-44ac-984e-171b5cba40f2" />
+<img width="1540" height="611" alt="image" src="https://github.com/user-attachments/assets/c781890d-5e44-45fd-b698-7968f3de16a8" />
+
 
 
 - **Caption:** The project was organized into four milestones covering the project foundation, authentication and employee management, employee feedback and morale, and the HR dashboard and deployment, with all issues closed and completed.
@@ -75,7 +76,7 @@ _Provide a screenshot of your GitHub Project Board with your issues organized dy
 <img width="940" height="446" alt="image" src="https://github.com/user-attachments/assets/2262d9ab-02d9-40b1-9729-0c3ed0d08bab" />
 
 
-- **Caption:** The project board shows 12 issues completed and 1 issue currently in progress, with 2 issues still in the Todo column. This shows that most of the planned work has been completed, while the remaining tasks are being finalized for submission.
+- **Caption:** The project board shows 12 issues completed and 1 issue currently in progress, with 2 issues still in the Todo column. This shows that most of the planned work has been completed, while the remaining tasks are either currently being implemented or are yet to be started.
 
 ### C. Branching Architecture
 
@@ -134,6 +135,7 @@ _Screenshot of your clean Git history or completed PR showing the conflict was r
 <img width="940" height="356" alt="image" src="https://github.com/user-attachments/assets/1c6429ca-2767-4845-80e1-9507620b2d3e" />
 
 
+
 - **Caption:** The conflict was resolved by keeping the “Employee Morale System - Live Demo” version in README.md. The resolved file was committed, and the Git history confirms that both branches were successfully merged with no remaining conflicts.
 
 ---
@@ -147,6 +149,7 @@ _Screenshot of your clean Git history or completed PR showing the conflict was r
 <img width="940" height="61" alt="image" src="https://github.com/user-attachments/assets/85acf232-3050-47af-ac71-10412f2c1cd0" />
 
 
+
 - **Caption:** The conflict/15-update-demo branch modified docs/conflict-2-demo.md, while conflict/15-delete-vs-modify-delete deleted the same file. Git detected a modify/delete conflict and stopped the merge. I chose to leave the modified version in the working tree.
 
 ---
@@ -158,6 +161,7 @@ _Screenshot of your clean Git history or completed PR showing the conflict was r
 **Why does this cause trigger a conflict?** Two branches add different names like Bob and Alice to the same location at the end of the list. Git sees both additions as competing changes to the same location, so it cannot automatically decide which one should come first.
 
 <img width="940" height="201" alt="image" src="https://github.com/user-attachments/assets/90f079b7-b3e0-4ff2-82a5-2fb93cad00e1" />
+
 
 
 - **Caption:** Two different branches appended different names (Alice and Bob) to the bottom of docs/conflict-3-list.md, causing Git to mark the overlapping additions as a conflict.
